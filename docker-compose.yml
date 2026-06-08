@@ -1,0 +1,38 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    expose:
+      - "8000"
+    environment:
+      FLWRR_ROOT: /app
+      FLWRR_DB_PATH: /app/plants.db
+      FLWRR_STATIC_DIR: /app/static
+      FLWRR_MODEL_PATH: /app/best_model.pth
+    volumes:
+      - ./plants.db:/app/plants.db
+      - ./static:/app/static:ro
+      - ./best_model.pth:/app/best_model.pth:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    ports:
+      - "${FLWRR_HTTP_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
