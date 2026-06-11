@@ -11,4 +11,5 @@ frontend/dist/
 .ipynb_checkpoints/
 best_model.pth
 plants.db
-ml_part/
+ml_part/data/**
+
